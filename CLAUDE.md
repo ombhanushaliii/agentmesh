@@ -232,8 +232,8 @@ Before writing any UI code, study example/ui/ in full.
 - [x] shared/types/index.ts committed
 - [ ] CapabilityRegistry.sol — deployed, address recorded above
 - [ ] JobEscrow.sol — deployed, address recorded above
-- [ ] packages/storage — 0G KV + Log + File working
-- [ ] packages/messaging — AXL client working (two-node test passing)
+- [x] packages/storage — 0G KV + Log + File working
+- [x] packages/messaging — AXL client working (10 unit tests passing; two-node test requires live AXL binary)
 - [ ] packages/sdk — AgentMesh class working end-to-end
 - [ ] packages/sdk/examples/minimal-agent.ts runs
 - [ ] docs/architecture.md written

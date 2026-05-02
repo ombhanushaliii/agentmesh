@@ -4,10 +4,14 @@
   "version": "0.0.0",
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist",
-    "test":  "bun test",
-    "dev":   "bun --watch ./src/index.ts"
+    "test": "bun test",
+    "dev": "bun --watch ./src/index.ts"
   },
   "exports": {
     ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@0gfoundation/0g-ts-sdk": "^1.2.8",
+    "ethers": "^6.16.0"
   }
 }

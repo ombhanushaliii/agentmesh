@@ -4,7 +4,10 @@
   "workspaces": ["shared/*", "packages/*", "apps/*"],
   "scripts": {
     "build": "bun run --filter='*' build",
-    "test":  "bun run --filter='*' test",
-    "dev":   "bun run --filter='*' dev"
+    "test": "bun run --filter='*' test",
+    "dev": "bun run --filter='*' dev"
+  },
+  "dependencies": {
+    "@0gfoundation/0g-storage-ts-sdk": "^1.2.8"
   }
 }
