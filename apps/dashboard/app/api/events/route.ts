@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-export async function GET(req: Request) {
+export async function GET() {
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
     start(controller) {
@@ -13,20 +13,17 @@ export async function GET(req: Request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
       }
 
-      // Initial burst of mock events
-      sendEvent("System", "Dashboard connected")
-      sendEvent("Planner-Alpha", "Waiting for goal")
+      // Subscribe to real AgentEvents from AXL/0G Log
+      // This is a placeholder for the real SDK subscription logic
+      const subscription = setInterval(() => {
+        // Actual implementation will use mesh.subscribeToEvents()
+      }, 1000)
 
-      setInterval(() => {
-        const agents = ["Researcher-1", "Planner-Alpha", "System"]
-        const actions = ["Heartbeat", "Scanning 0G Storage", "Updating reputation"]
-        sendEvent(
-          agents[Math.floor(Math.random() * agents.length)],
-          actions[Math.floor(Math.random() * actions.length)]
-        )
-      }, 5000)
+      // Store subscription in a way it can be cleaned up or handle via connection close
     },
-    cancel() {},
+    cancel() {
+      // Cleanup subscription
+    },
   })
 
   return new NextResponse(stream, {
