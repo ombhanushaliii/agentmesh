@@ -10,9 +10,21 @@
   "dependencies": {
     "@0gfoundation/0g-storage-ts-sdk": "^1.2.8",
     "@google/genai": "^1.51.0",
-    "ethers": "^6.16.0"
+    "ethers": "^6.16.0",
+    "lucide-react": "^1.14.0",
+    "next": "^16.2.4",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
-    "shadcn": "^4.6.0"
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.13",
+    "shadcn": "^4.6.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3"
   }
 }
