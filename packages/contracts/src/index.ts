@@ -10,5 +10,3 @@ export const addresses = {
   chainId: deployedAddresses.chainId,
   network: deployedAddresses.network,
 };
-
-export type { CapabilityRegistryABI, JobEscrowABI };
