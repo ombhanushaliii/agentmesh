@@ -229,7 +229,7 @@ Before writing any UI code, study example/ui/ in full.
 
 ### Infrastructure (packages/contracts, storage, messaging, sdk, shared/types)
 - [x] Repo initialized — bun workspace, tsconfig, .env.example
-- [ ] shared/types/index.ts committed
+- [x] shared/types/index.ts committed
 - [ ] CapabilityRegistry.sol — deployed, address recorded above
 - [ ] JobEscrow.sol — deployed, address recorded above
 - [ ] packages/storage — 0G KV + Log + File working

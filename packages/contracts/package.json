@@ -1,13 +1,29 @@
 {
   "name": "@agentmesh/contracts",
-  "type": "module",
   "version": "0.0.0",
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist",
-    "test":  "bun test",
-    "dev":   "bun --watch ./src/index.ts"
+    "build": "hardhat compile",
+    "test": "hardhat test",
+    "dev": "hardhat node",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network 0g-testnet",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost"
   },
   "exports": {
     ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^20.12.0",
+    "chai": "^4.4.0",
+    "ethers": "^6.0.0",
+    "hardhat": "^2.22.0",
+    "mocha": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0"
   }
 }

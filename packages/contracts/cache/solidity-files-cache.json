@@ -1,0 +1,80 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "D:\\AgentMesh\\packages\\contracts\\contracts\\CapabilityRegistry.sol": {
+      "lastModificationDate": 1777724544461,
+      "contentHash": "47599955b5cb98309293f3743c2a065e",
+      "sourceName": "contracts/CapabilityRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "CapabilityRegistry"
+      ]
+    },
+    "D:\\AgentMesh\\packages\\contracts\\contracts\\JobEscrow.sol": {
+      "lastModificationDate": 1777724582359,
+      "contentHash": "1134b2e3a29b3de11d55156a3ebd1f97",
+      "sourceName": "contracts/JobEscrow.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "ICapabilityRegistry",
+        "JobEscrow"
+      ]
+    }
+  }
+}
