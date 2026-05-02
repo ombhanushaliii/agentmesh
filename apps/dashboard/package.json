@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "scripts": {
     "build": "next build",
-    "test":  "bun test",
-    "dev":   "next dev"
+    "test": "bun test",
+    "dev": "next dev"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4"
   }
 }

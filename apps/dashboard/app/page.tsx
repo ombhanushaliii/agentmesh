@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Input } from "../components/ui/input"
 import { Button } from "../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
-import { Copy } from "lucide-react"
 
 type AgentProfile = {
   name: string
@@ -18,6 +17,14 @@ type AgentEvent = {
   timestamp: string
   agent: string
   action: string
+}
+
+function formatTime(ts: string): string {
+  try {
+    return new Date(ts).toTimeString().slice(0, 8)
+  } catch {
+    return ts.slice(0, 8)
+  }
 }
 
 export default function HomePage() {
@@ -52,7 +59,7 @@ export default function HomePage() {
   }
 
   async function runGoal() {
-    if (!goal) return
+    if (!goal || isRunning) return
     setIsRunning(true)
     setResult(null)
     try {
@@ -96,85 +103,101 @@ export default function HomePage() {
     }
   }
 
-  const copyResult = () => {
-    if (result) navigator.clipboard.writeText(result)
-  }
-
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {agents.map((agent) => (
-          <Card key={agent.name}>
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-lg font-bold">{agent.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <span>{agent.status}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Capabilities</span>
-                <span className="text-right">{agent.capabilities.join(", ")}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Reputation</span>
-                <span>{agent.reputation} reputation</span>
-              </div>
-              {agent.status === "working" && agent.currentJob && (
-                <div className="mt-2 pt-2 border-t text-xs text-muted-foreground truncate">
-                  Job: {agent.currentJob}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      <div className="space-y-4">
-        <div className="flex flex-col gap-4">
-          <Input
-            placeholder="e.g. Research the top risks of liquid staking"
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-            className="text-lg"
-          />
-          <div className="flex justify-end">
-            <Button onClick={runGoal} disabled={isRunning}>
-              {isRunning ? "Running..." : "Run"}
-            </Button>
-          </div>
+      {/* Agents */}
+      {agents.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {agents.map((agent) => (
+            <Card key={agent.name}>
+              <CardHeader>
+                <CardTitle>{agent.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Status</div>
+                  <div className="text-sm font-medium capitalize">{agent.status}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Capabilities</div>
+                  <div className="text-sm">{agent.capabilities.join(", ")}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Reputation</div>
+                  <div className="text-sm font-medium">{agent.reputation} reputation</div>
+                </div>
+                {agent.status === "working" && agent.currentJob && (
+                  <div className="pt-3 border-t">
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Current Job</div>
+                    <div className="text-xs text-muted-foreground truncate">{agent.currentJob}</div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border px-6 py-12 text-center text-sm text-muted-foreground">
+          No agents registered.
+        </div>
+      )}
+
+      {/* Goal input */}
+      <div className="space-y-3">
+        <Input
+          placeholder="e.g. Research the top risks of liquid staking"
+          value={goal}
+          onChange={(e) => setGoal(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && runGoal()}
+          className="h-10 text-sm"
+        />
+        <div className="flex justify-end">
+          <Button onClick={runGoal} disabled={isRunning || !goal}>
+            {isRunning ? "Running..." : "Run"}
+          </Button>
         </div>
       </div>
 
+      {/* Activity feed */}
       <div className="space-y-2">
-        <div className="text-sm font-medium text-muted-foreground">Activity Feed</div>
-        <div className="bg-muted/30 border rounded-md p-3 h-[300px] overflow-y-auto font-mono text-xs space-y-1">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Activity</div>
+        <div className="rounded-xl border bg-muted/30 px-4 py-3 h-[300px] overflow-y-auto font-mono text-xs">
           {events.length === 0 ? (
-            <div className="text-muted-foreground italic">No activity yet.</div>
+            <span className="text-muted-foreground italic">No activity yet.</span>
           ) : (
-            events.map((event, i) => (
-              <div key={i} className="whitespace-nowrap">
-                <span className="text-muted-foreground mr-2">{event.timestamp}</span>
-                <span className="font-bold mr-2">{event.agent}</span>
-                <span>{event.action}</span>
-              </div>
-            ))
+            <div className="space-y-1">
+              {events.map((event, i) => (
+                <div key={i} className="whitespace-nowrap">
+                  <span className="text-muted-foreground">{formatTime(event.timestamp)}</span>
+                  {"  "}
+                  <span className="font-semibold">{event.agent}</span>
+                  {"  "}
+                  <span>{event.action}</span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
 
+      {/* Result */}
       {result && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
-            <CardTitle className="text-sm font-medium">Synthesized Result</CardTitle>
-            <Button variant="outline" size="sm" onClick={copyResult} className="h-8 px-2">
-              <Copy className="h-3 w-3 mr-1" />
-              Copy
-            </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Result</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm leading-relaxed">
-            {result}
+          <CardContent className="space-y-4">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{result}</p>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigator.clipboard.writeText(result)}
+              >
+                Copy
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
