@@ -7,6 +7,7 @@
       "dependencies": {
         "@0gfoundation/0g-storage-ts-sdk": "^1.2.8",
         "@google/genai": "^1.51.0",
+        "ethers": "^6.16.0",
       },
       "devDependencies": {
         "shadcn": "^4.6.0",

@@ -6,13 +6,14 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "@agentmesh/types":     ["./shared/types/index.ts"],
       "@agentmesh/storage":   ["./packages/storage/src/index.ts"],
       "@agentmesh/contracts": ["./packages/contracts/src/index.ts"],
       "@agentmesh/messaging": ["./packages/messaging/src/index.ts"],
-      "@agentmesh/sdk":       ["./packages/sdk/src/index.ts"]
+      "@agentmesh/sdk":       ["./packages/sdk/src/index.ts"],
+      "@agentmesh/agents":    ["./packages/agents/src/index.ts"],
+      "@agentmesh/settlement":["./packages/settlement/src/index.ts"]
     }
   }
 }
