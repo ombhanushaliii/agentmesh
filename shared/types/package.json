@@ -1,0 +1,13 @@
+{
+  "name": "@agentmesh/types",
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "bun build ./index.ts --outdir ./dist",
+    "test":  "bun test",
+    "dev":   "bun --watch ./index.ts"
+  },
+  "exports": {
+    ".": "./index.ts"
+  }
+}

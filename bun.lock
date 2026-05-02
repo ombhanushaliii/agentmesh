@@ -1,0 +1,46 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "agentmesh",
+    },
+    "apps/dashboard": {
+      "name": "@agentmesh/dashboard",
+      "version": "0.0.0",
+    },
+    "packages/contracts": {
+      "name": "@agentmesh/contracts",
+      "version": "0.0.0",
+    },
+    "packages/messaging": {
+      "name": "@agentmesh/messaging",
+      "version": "0.0.0",
+    },
+    "packages/sdk": {
+      "name": "@agentmesh/sdk",
+      "version": "0.0.0",
+    },
+    "packages/storage": {
+      "name": "@agentmesh/storage",
+      "version": "0.0.0",
+    },
+    "shared/types": {
+      "name": "@agentmesh/types",
+      "version": "0.0.0",
+    },
+  },
+  "packages": {
+    "@agentmesh/contracts": ["@agentmesh/contracts@workspace:packages/contracts"],
+
+    "@agentmesh/dashboard": ["@agentmesh/dashboard@workspace:apps/dashboard"],
+
+    "@agentmesh/messaging": ["@agentmesh/messaging@workspace:packages/messaging"],
+
+    "@agentmesh/sdk": ["@agentmesh/sdk@workspace:packages/sdk"],
+
+    "@agentmesh/storage": ["@agentmesh/storage@workspace:packages/storage"],
+
+    "@agentmesh/types": ["@agentmesh/types@workspace:shared/types"],
+  }
+}

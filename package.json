@@ -1,0 +1,10 @@
+{
+  "name": "agentmesh",
+  "private": true,
+  "workspaces": ["shared/*", "packages/*", "apps/*"],
+  "scripts": {
+    "build": "bun run --filter='*' build",
+    "test":  "bun run --filter='*' test",
+    "dev":   "bun run --filter='*' dev"
+  }
+}

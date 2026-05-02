@@ -1,0 +1,10 @@
+{
+  "name": "@agentmesh/dashboard",
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "next build",
+    "test":  "bun test",
+    "dev":   "next dev"
+  }
+}

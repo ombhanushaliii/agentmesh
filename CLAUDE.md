@@ -228,7 +228,7 @@ Before writing any UI code, study example/ui/ in full.
 ## Progress
 
 ### Infrastructure (packages/contracts, storage, messaging, sdk, shared/types)
-- [ ] Repo initialized — bun workspace, tsconfig, .env.example
+- [x] Repo initialized — bun workspace, tsconfig, .env.example
 - [ ] shared/types/index.ts committed
 - [ ] CapabilityRegistry.sol — deployed, address recorded above
 - [ ] JobEscrow.sol — deployed, address recorded above
