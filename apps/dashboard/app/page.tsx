@@ -36,7 +36,7 @@ export default function HomePage() {
     try {
       const res = await fetch("/api/agents")
       const data = await res.json()
-      setAgents(data)
+      setAgents(Array.isArray(data) ? data : [])
     } catch (e) {
       console.error("Failed to fetch agents", e)
     }

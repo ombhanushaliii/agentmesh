@@ -42,6 +42,6 @@ export async function GET() {
     return NextResponse.json(profiles)
   } catch (e) {
     console.error("Failed to fetch agents:", e)
-    return NextResponse.json({ error: "Failed to fetch agents" }, { status: 500 })
+    return NextResponse.json([])
   }
 }

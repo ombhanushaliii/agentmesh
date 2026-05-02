@@ -265,12 +265,13 @@ Before writing any UI code, study example/ui/ in full.
 - [x] docs/architecture.md written
 
 ### Application (agents, settlement, dashboard, demo)
-- [ ] ResearcherAgent — registers, receives jobs, runs 0G Compute inference
-- [ ] PlannerAgent — decomposes goals, posts jobs, synthesizes results
-- [ ] packages/settlement — KeeperHub MCP settlement working
-- [ ] apps/dashboard — UI renders, live event feed works
-- [ ] dashboard wired to real agents (not mocked)
-- [ ] demo/index.ts — full loop runs in one command
+- [x] ResearcherAgent — registers, receives jobs, runs 0G Compute inference (GLM-5-FP8)
+- [x] PlannerAgent — decomposes goals, posts jobs, synthesizes results via 0G Compute
+- [x] packages/settlement — KeeperHub MCP settlement + dispute window monitor written
+- [x] apps/dashboard — Next.js UI renders, agent cards, activity feed, result card
+- [x] demo/index.ts — full 15-step loop written (requires deployed contracts to run)
+- [ ] Contracts deployed to 0G testnet — addresses.json still empty; blocks all on-chain flows
+- [ ] dashboard wired to real agents (event stream is placeholder; /api/run executes real PlannerAgent)
 - [ ] README.md complete
 - [ ] FEEDBACK.md written (updated throughout, not at the end)
 
