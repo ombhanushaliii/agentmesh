@@ -225,6 +225,32 @@ Before writing any UI code, study example/ui/ in full.
 
 ---
 
+## SDK design deltas (packages/sdk)
+
+- **`onBid(handler)`** — added (not in original spec). Planners need to receive
+  BID messages; without it there is no way to call `acceptBid`. Handler receives
+  `(bid: Bid, specialistEndpoint: string)`.
+
+- **`job.planner` in `onJobAvailable`** — set to `plannerEndpoint` from the AXL
+  `JobPostMessage`, which is the planner's AXL public key, not their ETH address.
+  Pragmatic for hackathon: the ETH address is not needed for messaging.
+
+- **`onBidAccepted` signature** — `handler(accept: AcceptMessage, plannerEndpoint: string)`.
+  The second arg is `msg.from` from the ACCEPT envelope; specialists need it to
+  call `submitResult(jobId, content, plannerEndpoint)`.
+
+- **AXL single-poll multiplexing** — `AXLClient.subscribe` guards against double
+  registration (`if (this._poll) return`). The SDK sets up one shared poll in
+  `connect()` and fans out to all `_msgHandlers`. Never call
+  `axl.subscribe()` directly from `on*` methods.
+
+- **`connect()` throws on empty addresses** — if `addresses.CapabilityRegistry`
+  or `addresses.JobEscrow` is an empty string or `"0x"`, connect throws
+  `"contracts not deployed"`. Deploy contracts first and fill
+  `packages/contracts/deployments/addresses.json`.
+
+---
+
 ## Progress
 
 ### Infrastructure (packages/contracts, storage, messaging, sdk, shared/types)
@@ -234,9 +260,9 @@ Before writing any UI code, study example/ui/ in full.
 - [ ] JobEscrow.sol — deployed, address recorded above
 - [x] packages/storage — 0G KV + Log + File working
 - [x] packages/messaging — AXL client working (10 unit tests passing; two-node test requires live AXL binary)
-- [ ] packages/sdk — AgentMesh class working end-to-end
-- [ ] packages/sdk/examples/minimal-agent.ts runs
-- [ ] docs/architecture.md written
+- [x] packages/sdk — AgentMesh class written; end-to-end requires deployed contracts
+- [x] packages/sdk/examples/minimal-agent.ts written
+- [x] docs/architecture.md written
 
 ### Application (agents, settlement, dashboard, demo)
 - [ ] ResearcherAgent — registers, receives jobs, runs 0G Compute inference

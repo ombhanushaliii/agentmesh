@@ -1,1 +1,361 @@
-[]
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "agent",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string[]",
+        "name": "capabilities",
+        "type": "string[]"
+      }
+    ],
+    "name": "AgentRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "agent",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newScore",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "success",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "jobValue",
+        "type": "uint256"
+      }
+    ],
+    "name": "ReputationUpdated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "agentList",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "agent",
+        "type": "address"
+      }
+    ],
+    "name": "getProfile",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "agentAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string[]",
+            "name": "capabilities",
+            "type": "string[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pricePerJob",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "endpoint",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "available",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "registeredAt",
+            "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "score",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "totalJobs",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "successfulJobs",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "weightedSuccesses",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "weightedTotal",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CapabilityRegistry.ReputationRecord",
+            "name": "reputation",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct CapabilityRegistry.AgentProfile",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "jobEscrow",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "capability",
+        "type": "string"
+      }
+    ],
+    "name": "lookup",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "agentAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string[]",
+            "name": "capabilities",
+            "type": "string[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pricePerJob",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "endpoint",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "available",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "registeredAt",
+            "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "score",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "totalJobs",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "successfulJobs",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "weightedSuccesses",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "weightedTotal",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CapabilityRegistry.ReputationRecord",
+            "name": "reputation",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct CapabilityRegistry.AgentProfile[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string[]",
+        "name": "capabilities",
+        "type": "string[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pricePerJob",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "endpoint",
+        "type": "string"
+      }
+    ],
+    "name": "register",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "available",
+        "type": "bool"
+      }
+    ],
+    "name": "setAvailable",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_jobEscrow",
+        "type": "address"
+      }
+    ],
+    "name": "setJobEscrow",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "agent",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "success",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "jobValue",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateReputation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
