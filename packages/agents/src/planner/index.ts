@@ -7,7 +7,7 @@ type DecompositionTask = { description: string; capability: string };
 
 async function callLLM(ai: GoogleGenAI, system: string, user: string): Promise<string> {
   const res = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3-flash-preview",
     contents: [{ role: "user", parts: [{ text: `${system}\n\n${user}` }] }],
   });
   return res.text ?? "";
