@@ -22,8 +22,11 @@ export default function RootLayout({
           defaultTheme="dark"
           enableSystem
         >
-          <header className="flex items-center justify-between px-6 py-4 border-b">
-            <div className="text-lg font-bold tracking-tight">AgentMesh</div>
+          <header className="flex items-center justify-between px-6 py-3.5 border-b">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold tracking-tight">AgentMesh</span>
+              <span className="hidden sm:block text-xs text-muted-foreground">decentralized agent runtime</span>
+            </div>
             <ModeToggle />
           </header>
           <main>{children}</main>

@@ -4,7 +4,12 @@ import { useState, useEffect, useRef } from "react"
 import { Input } from "../components/ui/input"
 import { Button } from "../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Badge } from "../components/ui/badge"
+import { Separator } from "../components/ui/separator"
+import { ScrollArea } from "../components/ui/scroll-area"
 import { cn } from "../components/ui/utils"
+
+// ── Types ──────────────────────────────────────────────────────────────────
 
 type AgentProfile = {
   name: string
@@ -20,6 +25,8 @@ type AgentEvent = {
 }
 
 type Phase = "idle" | "decomposing" | "researching" | "synthesizing" | "done"
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatTime(ts: string): string {
   try { return new Date(ts).toTimeString().slice(0, 8) } catch { return ts.slice(0, 8) }
@@ -44,64 +51,183 @@ function latestPerAgent(events: AgentEvent[]): Map<string, string> {
   return map
 }
 
-const STEPS: { id: Phase; label: string; desc: string }[] = [
-  { id: "decomposing", label: "Decompose",  desc: "Planner splits the goal into sub-tasks" },
-  { id: "researching", label: "Research",   desc: "Specialists execute tasks in parallel" },
-  { id: "synthesizing", label: "Synthesize", desc: "Planner combines results into an answer" },
-]
+// ── Constants ──────────────────────────────────────────────────────────────
 
 const PHASE_ORDER: Phase[] = ["idle", "decomposing", "researching", "synthesizing", "done"]
+
+const STEPS = [
+  {
+    id: "decomposing" as Phase,
+    label: "Decompose",
+    desc: "Planner breaks the goal into parallel research tasks",
+  },
+  {
+    id: "researching" as Phase,
+    label: "Research",
+    desc: "Specialist agents bid, get hired on-chain, and run inference",
+  },
+  {
+    id: "synthesizing" as Phase,
+    label: "Synthesize",
+    desc: "Planner combines results and payment settles on-chain",
+  },
+]
+
+const PHASE_LABELS: Record<Phase, string> = {
+  idle: "",
+  decomposing: "Decomposing goal…",
+  researching: "Researching in parallel…",
+  synthesizing: "Synthesizing answer…",
+  done: "Complete",
+}
+
+const EXAMPLES = [
+  "What are the top 3 risks of liquid staking in 2025?",
+  "Summarize the most significant DeFi exploits this year",
+  "Compare optimistic vs ZK rollup trade-offs for developers",
+]
+
+// ── Pipeline ───────────────────────────────────────────────────────────────
 
 function Pipeline({ phase }: { phase: Phase }) {
   const current = PHASE_ORDER.indexOf(phase)
   return (
-    <div className="rounded-xl border px-6 py-5">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-4">Pipeline</div>
-      <div className="flex items-start">
-        {STEPS.map((step, i) => {
-          const stepCurrent = PHASE_ORDER.indexOf(step.id)
-          const isDone    = current > stepCurrent
-          const isActive  = current === stepCurrent
-          const isPending = current < stepCurrent
-          return (
-            <div key={step.id} className="flex items-start flex-1 min-w-0">
-              <div className="flex-1 min-w-0 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className={cn(
-                    "h-5 w-5 rounded-full border-2 flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors",
-                    isDone    && "bg-foreground border-foreground text-background",
-                    isActive  && "border-foreground text-foreground",
-                    isPending && "border-muted text-muted-foreground"
-                  )}>
-                    {isDone ? "✓" : i + 1}
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
+            Pipeline
+          </CardTitle>
+          {phase !== "idle" && phase !== "done" && (
+            <Badge variant="outline" className="text-[10px]">
+              <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-foreground animate-pulse inline-block" />
+              live
+            </Badge>
+          )}
+          {phase === "done" && (
+            <Badge variant="secondary" className="text-[10px]">complete</Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="pb-5">
+        <div className="space-y-0">
+          {STEPS.map((step, i) => {
+            const stepIdx = PHASE_ORDER.indexOf(step.id)
+            const isDone   = current > stepIdx
+            const isActive = current === stepIdx
+            const isPending = current < stepIdx
+            const isLast   = i === STEPS.length - 1
+
+            return (
+              <div key={step.id} className="flex gap-4">
+                {/* Left: connector line + circle */}
+                <div className="flex flex-col items-center">
+                  <div className="relative">
+                    {isActive && (
+                      <span className="absolute inset-0 rounded-full border-2 border-foreground animate-ping opacity-25" />
+                    )}
+                    <div
+                      className={cn(
+                        "h-7 w-7 rounded-full border-2 flex items-center justify-center text-[11px] font-bold shrink-0 transition-all duration-300",
+                        isDone   && "bg-foreground border-foreground text-background",
+                        isActive && "border-foreground text-foreground",
+                        isPending && "border-muted text-muted-foreground"
+                      )}
+                    >
+                      {isDone ? "✓" : i + 1}
+                    </div>
                   </div>
-                  <span className={cn(
-                    "text-xs font-medium truncate",
-                    isPending && "text-muted-foreground"
-                  )}>
-                    {step.label}
-                  </span>
-                  {isActive && (
-                    <span className="text-[10px] text-muted-foreground animate-pulse shrink-0">
-                      in progress
-                    </span>
+                  {!isLast && (
+                    <div className={cn(
+                      "w-px flex-1 my-1 min-h-[1.5rem] transition-colors duration-500",
+                      isDone ? "bg-foreground" : "bg-border"
+                    )} />
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground pl-7 leading-relaxed">{step.desc}</p>
+
+                {/* Right: content */}
+                <div className={cn("pb-5 flex-1 min-w-0", isLast && "pb-0")}>
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isPending && "text-muted-foreground"
+                    )}>
+                      {step.label}
+                    </span>
+                    <Badge
+                      variant={isDone ? "default" : isActive ? "outline" : "secondary"}
+                      className="text-[10px] shrink-0"
+                    >
+                      {isDone ? "done" : isActive ? "in progress" : "waiting"}
+                    </Badge>
+                  </div>
+                  <p className={cn(
+                    "text-xs leading-relaxed",
+                    isPending ? "text-muted-foreground/60" : "text-muted-foreground"
+                  )}>
+                    {step.desc}
+                  </p>
+                </div>
               </div>
-              {i < STEPS.length - 1 && (
-                <div className={cn(
-                  "h-px w-6 mt-2.5 mx-3 shrink-0 transition-colors",
-                  isDone ? "bg-foreground" : "bg-border"
-                )} />
-              )}
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ── Agent Card ─────────────────────────────────────────────────────────────
+
+function AgentCard({
+  agent,
+  latestAction,
+  isRunning,
+}: {
+  agent: AgentProfile
+  latestAction?: string
+  isRunning: boolean
+}) {
+  const isWorking = isRunning && !!latestAction
+
+  return (
+    <div className={cn(
+      "rounded-lg border p-4 space-y-3 transition-all duration-200",
+      isWorking && "border-foreground/30 bg-muted/20"
+    )}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium truncate">{agent.name}</span>
+        <Badge variant={isWorking ? "default" : "outline"} className="shrink-0 text-[10px]">
+          {isWorking ? (
+            <>
+              <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-background inline-block animate-pulse" />
+              working
+            </>
+          ) : agent.status}
+        </Badge>
       </div>
+
+      <div className="flex flex-wrap gap-1">
+        {agent.capabilities.map((cap) => (
+          <Badge key={cap} variant="secondary" className="text-[10px]">{cap}</Badge>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">Reputation</span>
+        <span className="font-medium tabular-nums">{agent.reputation} / 100</span>
+      </div>
+
+      {isWorking && latestAction && (
+        <div className="pt-2 border-t">
+          <p className="text-[11px] text-muted-foreground truncate">{latestAction}</p>
+        </div>
+      )}
     </div>
   )
 }
+
+// ── Main Page ──────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   const [goal, setGoal] = useState("")
@@ -109,11 +235,12 @@ export default function HomePage() {
   const [result, setResult] = useState<string | null>(null)
   const [events, setEvents] = useState<AgentEvent[]>([])
   const [agents, setAgents] = useState<AgentProfile[]>([])
-  const feedRef = useRef<HTMLDivElement>(null)
+  const [copied, setCopied] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const phase = derivePhase(events, isRunning, result !== null)
   const agentActions = latestPerAgent(events)
-  const showPipeline = isRunning || (phase !== "idle")
+  const showPipeline = phase !== "idle"
 
   useEffect(() => {
     fetchAgents()
@@ -176,142 +303,197 @@ export default function HomePage() {
     }
   }
 
+  function copyResult() {
+    if (!result) return
+    navigator.clipboard.writeText(result)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
+
+  function useExample(text: string) {
+    setGoal(text)
+    inputRef.current?.focus()
+  }
+
   return (
-    <div className="min-h-screen p-6 max-w-4xl mx-auto space-y-6">
+    <div className="min-h-[calc(100vh-3.25rem)] p-6 max-w-6xl mx-auto flex flex-col gap-6">
 
-      {/* Header */}
-      <div className="space-y-0.5 pb-2 border-b">
-        <h1 className="font-semibold">AgentMesh</h1>
-        <p className="text-sm text-muted-foreground">
-          Autonomous AI agents discover, hire, and pay each other on-chain to complete your goal.
-        </p>
-      </div>
-
-      {/* Goal input — primary action */}
-      <div className="flex gap-2">
-        <Input
-          placeholder="What should the agents research? e.g. Top risks of liquid staking"
-          value={goal}
-          onChange={(e) => setGoal(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && runGoal()}
-          disabled={isRunning}
-          className="h-10"
-          suppressHydrationWarning
-        />
-        <Button
-          onClick={runGoal}
-          disabled={isRunning || !goal.trim()}
-          className="shrink-0 px-6"
-          suppressHydrationWarning
-        >
-          {isRunning ? "Running…" : "Run"}
-        </Button>
-      </div>
-
-      {/* Pipeline — visible once a run starts */}
-      {showPipeline && <Pipeline phase={phase} />}
-
-      {/* Registered agents */}
-      <div className="space-y-3">
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          Registered Agents
-        </div>
-
-        {agents.length === 0 ? (
-          <div className="rounded-xl border px-6 py-8 text-center text-sm text-muted-foreground">
-            No agents registered on-chain yet. Run the researcher script to register one.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {agents.map((agent) => {
-              const latest = agentActions.get(agent.name)
-              const isWorking = isRunning && !!latest
-              return (
-                <div
-                  key={agent.name}
-                  className={cn(
-                    "rounded-xl border px-5 py-4 space-y-3 transition-all duration-200",
-                    isWorking && "border-foreground shadow-sm"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{agent.name}</span>
-                    <span className={cn(
-                      "text-[10px] uppercase tracking-widest font-medium",
-                      isWorking ? "text-foreground" : "text-muted-foreground"
-                    )}>
-                      {isWorking ? "● working" : agent.status}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      Capabilities
-                    </div>
-                    <div className="text-xs">{agent.capabilities.join(", ")}</div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Reputation</span>
-                    <span className="font-medium tabular-nums">{agent.reputation}</span>
-                  </div>
-
-                  {latest && isRunning && (
-                    <div className="pt-2 border-t">
-                      <p className="text-[11px] text-muted-foreground truncate">{latest}</p>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Activity feed — only when there's something to show */}
-      {events.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Activity
-          </div>
-          <div
-            ref={feedRef}
-            className="rounded-xl border bg-muted/30 px-4 py-3 h-44 overflow-y-auto font-mono text-xs space-y-1"
+      {/* ── Command bar ─────────────────────────────────────────────────── */}
+      <div className="space-y-3 pt-2">
+        <div className="flex gap-2">
+          <Input
+            ref={inputRef}
+            placeholder="What should the agents research?"
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && runGoal()}
+            disabled={isRunning}
+            className="h-11 text-sm"
+            suppressHydrationWarning
+          />
+          <Button
+            onClick={runGoal}
+            disabled={isRunning || !goal.trim()}
+            className="h-11 px-5 shrink-0 font-medium"
+            suppressHydrationWarning
           >
-            {events.map((ev, i) => (
-              <div key={i} className="flex gap-3">
-                <span className="text-muted-foreground shrink-0 tabular-nums">
-                  {formatTime(ev.timestamp)}
-                </span>
-                <span className="font-semibold shrink-0">{ev.agent}</span>
-                <span className="text-muted-foreground truncate">{ev.action}</span>
-              </div>
-            ))}
-          </div>
+            {isRunning ? (
+              <span className="flex items-center gap-2">
+                <span className="inline-block animate-spin">↻</span>
+                Running
+              </span>
+            ) : "Run →"}
+          </Button>
         </div>
-      )}
 
-      {/* Result */}
-      {result && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Result</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{result}</p>
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigator.clipboard.writeText(result)}
-              >
-                Copy
-              </Button>
+        {/* Status line */}
+        <div className="h-5 flex items-center gap-3">
+          {isRunning && phase !== "idle" && (
+            <span className="text-xs text-muted-foreground animate-pulse">
+              {PHASE_LABELS[phase]}
+            </span>
+          )}
+          {phase === "done" && !isRunning && (
+            <span className="text-xs text-muted-foreground">
+              Done — {events.length} events recorded
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Two-column body ──────────────────────────────────────────────── */}
+      <div className="flex flex-col md:grid md:grid-cols-5 gap-6 flex-1">
+
+        {/* Left (3/5) — pipeline + result + empty state */}
+        <div className="md:col-span-3 flex flex-col gap-5">
+
+          {showPipeline && <Pipeline phase={phase} />}
+
+          {result && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
+                    Answer
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={copyResult}
+                    className="h-7 px-2.5 text-xs"
+                  >
+                    {copied ? "Copied ✓" : "Copy"}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-7 whitespace-pre-wrap">{result}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {!showPipeline && !result && (
+            <div className="flex-1 rounded-lg border border-dashed flex flex-col items-center justify-center gap-6 py-12 px-8 text-center">
+              <div className="space-y-1.5 max-w-xs">
+                <p className="text-sm font-medium">No agents running</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Type a goal above and click Run. Agents will discover each other on-chain,
+                  bid for tasks, run inference, and settle payment automatically.
+                </p>
+              </div>
+              <div className="w-full max-w-xs space-y-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Try an example</p>
+                <div className="flex flex-col gap-1.5">
+                  {EXAMPLES.map((ex) => (
+                    <button
+                      key={ex}
+                      onClick={() => useExample(ex)}
+                      className="text-left text-xs px-3 py-2.5 rounded-md border hover:border-foreground/30 hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {ex}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
 
+        {/* Right (2/5) — agents + activity */}
+        <div className="md:col-span-2 flex flex-col gap-5">
+
+          {/* Agents */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
+                Agents
+              </span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {agents.length} registered
+              </span>
+            </div>
+
+            {agents.length === 0 ? (
+              <div className="rounded-lg border border-dashed px-4 py-6 text-center">
+                <p className="text-xs text-muted-foreground">No agents registered on-chain.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Run <code className="font-mono bg-muted px-1 py-px rounded text-[10px]">bun run scripts/run-researcher.ts</code>
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {agents.map((agent) => (
+                  <AgentCard
+                    key={agent.name}
+                    agent={agent}
+                    latestAction={agentActions.get(agent.name)}
+                    isRunning={isRunning}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Activity feed */}
+          <div className="space-y-3 flex-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
+                Activity
+              </span>
+              {events.length > 0 && (
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {events.length}
+                </span>
+              )}
+            </div>
+
+            <ScrollArea className="h-64 rounded-lg border bg-muted/20">
+              {events.length === 0 ? (
+                <div className="h-64 flex items-center justify-center">
+                  <p className="text-xs text-muted-foreground">Waiting for activity…</p>
+                </div>
+              ) : (
+                <div className="p-3 space-y-0.5 font-mono text-[11px]">
+                  {events.map((ev, i) => (
+                    <div key={i} className="flex gap-2 py-0.5 items-baseline min-w-0">
+                      <span className="text-muted-foreground/60 shrink-0 tabular-nums">
+                        {formatTime(ev.timestamp)}
+                      </span>
+                      <span className="text-muted-foreground shrink-0 font-sans font-medium text-[10px]">
+                        {ev.agent}
+                      </span>
+                      <span className="text-muted-foreground truncate">{ev.action}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+
+        </div>
+      </div>
     </div>
   )
 }
