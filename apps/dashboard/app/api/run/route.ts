@@ -1,62 +1,72 @@
 import { NextResponse } from "next/server"
 import { PlannerAgent } from "@agentmesh/agents"
+import { publish } from "../../../lib/eventBus"
+import type { AgentEvent } from "@agentmesh/types"
+
+let planner: PlannerAgent | null = null
+let initPromise: Promise<PlannerAgent> | null = null
+
+async function initPlanner(): Promise<PlannerAgent> {
+  const privateKey = process.env.PLANNER_PRIVATE_KEY
+  const inferenceApiKey = process.env.GEMINI_API_KEY
+  if (!privateKey) throw new Error("PLANNER_PRIVATE_KEY not set in .env.local")
+  if (!inferenceApiKey) throw new Error("GEMINI_API_KEY not set in .env.local")
+
+  const agent = new PlannerAgent({
+    privateKey,
+    axlBridgeUrl: process.env.AXL_BRIDGE_URL ?? "http://127.0.0.1:9002",
+    agentName: "planner-01",
+    inferenceApiKey,
+  })
+
+  agent.onAgentEvent((e: AgentEvent) => {
+    const parts = [e.type, e.jobId?.slice(0, 8), e.detail].filter(Boolean)
+    publish(e.agentName, parts.join(" — "))
+  })
+
+  await agent.start()
+  planner = agent
+  return agent
+}
+
+async function getPlanner(): Promise<PlannerAgent> {
+  if (planner) return planner
+  if (!initPromise) {
+    initPromise = initPlanner().catch((e) => {
+      initPromise = null
+      throw e
+    })
+  }
+  return initPromise
+}
 
 export async function POST(req: Request) {
-  try {
-    const { goal } = await req.json()
+  const encoder = new TextEncoder()
 
-    const encoder = new TextEncoder()
-    const stream = new ReadableStream({
-      async start(controller) {
-        const sendEvent = (agent: string, action: string) => {
-          const event = {
-            timestamp: new Date().toLocaleTimeString(),
-            agent,
-            action,
-          }
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
-        }
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (text: string) => controller.enqueue(encoder.encode(text))
 
-        // Initialize PlannerAgent with required config
-        const planner = new PlannerAgent({
-          privateKey: process.env.PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000000",
-          axlPort: 8080,
-          agentName: "Planner-Alpha",
-          computeApiKey: process.env.GEMINI_API_KEY,
-        })
+      try {
+        const { goal } = await req.json()
+        const agent = await getPlanner()
+        publish("planner-01", `received goal: ${goal.slice(0, 80)}`)
+        const result = await agent.executeGoal(goal)
+        send(result)
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
+        console.error("Run goal failed:", msg)
+        send(`Error: ${msg}`)
+      }
 
-        await planner.start()
+      controller.close()
+    },
+  })
 
-        // PlannerAgent.executeGoal implementation uses console.log for events
-        // In a real production build, we'd inject a callback or use an EventEmitter
-        // For the hackathon, we use the returned final result and simulate the events
-
-        sendEvent("Planner-Alpha", `Received goal: ${goal}`)
-        await new Promise(r => setTimeout(r, 1000))
-        sendEvent("Planner-Alpha", "Decomposing goal into sub-jobs...")
-        await new Promise(r => setTimeout(r, 1500))
-
-        const finalResult = await planner.executeGoal(goal)
-
-        sendEvent("Planner-Alpha", "Synthesizing final answer...")
-        await new Promise(r => setTimeout(r, 1000))
-
-        controller.enqueue(encoder.encode(finalResult))
-        controller.close()
-
-        await planner.stop()
-      },
-    })
-
-    return new NextResponse(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-      },
-    })
-  } catch (e) {
-    console.error("Run goal failed:", e)
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
-  }
+  return new NextResponse(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-cache",
+    },
+  })
 }

@@ -1,140 +1,116 @@
 import { AgentMesh } from "@agentmesh/sdk";
-import { AgentEvent, JobResult } from "@agentmesh/types";
-import { DECOMPOSITION_PROMPT, SYNTHESIS_PROMPT } from "./prompts";
+import type { AgentEvent, JobResult } from "@agentmesh/types";
 import { GoogleGenAI } from "@google/genai";
+import { DECOMPOSITION_PROMPT, SYNTHESIS_PROMPT } from "./prompts";
 
-type DecompositionTask = {
-  description: string;
-  capability: string;
-};
+type DecompositionTask = { description: string; capability: string };
 
-type DecompositionResponse = {
-  tasks: DecompositionTask[];
-};
-
-// Mock for SDK if not available
-const SDK_AVAILABLE = false;
-if (!SDK_AVAILABLE) {
-  class AgentMesh {
-    constructor(_c: any) {}
-    async connect() {}
-    async disconnect() {}
-    getEndpoint() { return 'mock-axl' }
-    async register(_p: any) {}
-    async findAgents(_c: any) { return [] }
-    async postJob(_p: any) { return 'job-' + Date.now() }
-    onJobAvailable(_h: any) {}
-    async acceptBid(_j: any, _b: any) {}
-    onResult(_h: any) {}
-    async bid(_j: any, _p: any, _e: any) {}
-    onBidAccepted(_h: any) {}
-    async submitResult(_j: any, _c: any) {
-      return { jobId:'mock', resultHash:'0x', resultUrl:'mock', specialist:'0x0', deliveredAt: Date.now() }
-    }
-    async decompose(_p: any, _t: any) { return ['child-1', 'child-2'] }
-    async awaitAllSubJobs(_p: any, _c: any) {
-      return [{ jobId: 'child-1', content: 'Result 1' }, { jobId: 'child-2', content: 'Result 2' }];
-    }
-    onAgentEvent(_h: any) {}
-    async getJobHistory() { return [] }
-    async getProfile() { return null }
-  }
+async function callLLM(ai: GoogleGenAI, system: string, user: string): Promise<string> {
+  const res = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: [{ role: "user", parts: [{ text: `${system}\n\n${user}` }] }],
+  });
+  return res.text ?? "";
 }
 
 export class PlannerAgent {
   private mesh: AgentMesh;
   private agentName: string;
   private ai: GoogleGenAI;
+  private resultCache = new Map<string, string>();
 
-  constructor(config: { privateKey: string; axlPort: number; agentName?: string; computeApiKey?: string }) {
-    this.agentName = config.agentName || 'planner-01';
+  constructor(config: {
+    privateKey: string;
+    axlBridgeUrl?: string;
+    agentName?: string;
+    inferenceApiKey: string;
+  }) {
+    this.agentName = config.agentName ?? "planner-01";
+    this.ai = new GoogleGenAI({ apiKey: config.inferenceApiKey });
     this.mesh = new AgentMesh({
       privateKey: config.privateKey,
-      axlPort: config.axlPort,
+      axlBridgeUrl: config.axlBridgeUrl,
       agentName: this.agentName,
     });
-    this.ai = new GoogleGenAI({
-      apiKey: config.computeApiKey || process.env.GEMINI_API_KEY,
-    });
+  }
+
+  onAgentEvent(handler: (e: AgentEvent) => void | Promise<void>): void {
+    this.mesh.onAgentEvent(handler);
   }
 
   async start(): Promise<void> {
     await this.mesh.connect();
     await this.mesh.register(["planning", "synthesis"], 0n);
-    this.emitEvent("AGENT_REGISTERED");
+
+    // Auto-accept first bid per job (production would score by reputation/price)
+    const acceptedJobs = new Set<string>();
+    this.mesh.onBid(async (bid) => {
+      if (acceptedJobs.has(bid.jobId)) return;
+      acceptedJobs.add(bid.jobId);
+      await this.mesh.acceptBid(bid.jobId, bid.specialist, bid.bidPrice);
+    });
+
+    // Cache result content as it arrives via AXL before chain confirmation
+    this.mesh.onResult((result) => {
+      if (result.content) this.resultCache.set(result.jobId, result.content);
+    });
   }
 
   async executeGoal(goal: string): Promise<string> {
-    // 1. Decompose
+    // 1. Decompose goal into sub-tasks via 0G Compute
     const decomposition = await this.runDecomposition(goal);
     const tasks: DecompositionTask[] = decomposition.tasks;
 
-    // 2. Post Jobs
+    // 2. Post parent job + sub-jobs on-chain
     const parentDeadline = Math.floor(Date.now() / 1000) + 360;
     const parentJobId = await this.mesh.postJob(goal, "planning", 0n, parentDeadline);
 
-    const childIds = await this.mesh.decompose(parentJobId, tasks.map((t) => ({
-      description: t.description,
-      capability: t.capability,
-      budget: 1000000000000000n,
-      deadline: Math.floor(Date.now() / 1000) + 120,
-    })));
+    const childIds = await this.mesh.decompose(
+      parentJobId,
+      tasks.map((t) => ({
+        description: t.description,
+        capability: t.capability,
+        budget: 1_000_000_000_000_000n,
+        deadline: Math.floor(Date.now() / 1000) + 180,
+      }))
+    );
 
-    childIds.forEach(id => this.emitEvent("JOB_POSTED", id));
+    // 3. Wait for all sub-jobs to settle (KeeperHub auto-settles after dispute window)
+    const settled = await this.mesh.awaitAllSubJobs(parentJobId, childIds);
 
-    // 3. Await results
-    let results: JobResult[];
-    try {
-      results = await this.mesh.awaitAllSubJobs(parentJobId, childIds);
-    } catch (e) {
-      throw new Error(`Sub-jobs failed or timed out: ${e}`);
-    }
+    // 4. Synthesize — content arrives via AXL before chain settlement
+    const results: JobResult[] = settled.map((r) => ({
+      ...r,
+      content: this.resultCache.get(r.jobId) ?? "",
+    }));
+    this.resultCache.clear();
 
-    // 4. Synthesize
-    const finalAnswer = await this.runSynthesis(goal, results);
-    this.emitEvent("INFERENCE_DONE", parentJobId);
-
-    return finalAnswer;
+    return this.runSynthesis(goal, results);
   }
 
-  private async runDecomposition(goal: string): Promise<DecompositionResponse> {
-    let attempt = 0;
-    while (attempt < 2) {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          { role: "system", parts: [{ text: DECOMPOSITION_PROMPT }] },
-          { role: "user", parts: [{ text: goal }] },
-        ],
-      });
-      const content = response.text || "";
+  private async runDecomposition(
+    goal: string
+  ): Promise<{ tasks: DecompositionTask[] }> {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const raw = await callLLM(this.ai, DECOMPOSITION_PROMPT, goal);
+      const clean = raw.replace(/```json\n?|\n?```/g, "").trim();
       try {
-        return JSON.parse(content) as DecompositionResponse;
-      } catch (e) {
-        attempt++;
-        if (attempt === 2) throw new Error(`Invalid JSON from LLM after 2 attempts: ${content}`);
+        return JSON.parse(clean) as { tasks: DecompositionTask[] };
+      } catch {
+        if (attempt === 1) throw new Error(`Decomposition JSON parse failed: ${clean}`);
       }
     }
-    throw new Error("Failed to decompose goal");
+    throw new Error("Unreachable");
   }
 
   private async runSynthesis(goal: string, results: JobResult[]): Promise<string> {
-    const resultsText = results.map((r) => `Job ${r.jobId}: ${r.content ?? ""}`).join("\n\n");
-    const response = await this.ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [
-        { role: "system", parts: [{ text: SYNTHESIS_PROMPT }] },
-        { role: "user", parts: [{ text: `Goal: ${goal}\n\nResults:\n${resultsText}` }] },
-      ],
-    });
-    return response.text || "Failed to synthesize results";
-  }
-
-  private emitEvent(type: AgentEvent["type"], jobId?: string) {
-    console.log(`[EVENT] ${type} | Agent: ${this.agentName}${jobId ? ` | Job: ${jobId}` : ""}`);
+    const combined = results
+      .map((r, i) => `### Research ${i + 1}\n\n${r.content || "(no content)"}`)
+      .join("\n\n---\n\n");
+    return callLLM(this.ai, SYNTHESIS_PROMPT, `Goal: ${goal}\n\n${combined}`);
   }
 
   async stop(): Promise<void> {
-    await this.mesh.disconnect();
+    this.mesh.disconnect();
   }
 }

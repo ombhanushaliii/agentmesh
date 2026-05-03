@@ -35,7 +35,7 @@ export type {
 
 export interface AgentMeshConfig {
   privateKey: string;
-  axlPort: number;
+  axlBridgeUrl?: string;
   agentName: string;
   rpcUrl?: string;
 }
@@ -93,14 +93,18 @@ export class AgentMesh {
     this.registry = new ethers.Contract(registryAddr, CapabilityRegistryABI, this.wallet);
     this.escrow = new ethers.Contract(escrowAddr, JobEscrowABI, this.wallet);
 
-    this.axl = new AXLClient(`http://127.0.0.1:${this.config.axlPort}`);
+    const bridgeUrl =
+      this.config.axlBridgeUrl ?? process.env.AXL_BRIDGE_URL ?? "http://127.0.0.1:9002";
+    this.axl = new AXLClient(bridgeUrl);
     this._endpoint = await this.axl.publicKey();
 
     this.storage = createStorageClient({ privateKey: this.config.privateKey, rpcUrl });
 
     // Single poll — all on* handlers go through here to avoid subscribe's guard
     this.axl.subscribe(async (msg) => {
-      await Promise.all(this._msgHandlers.map((h) => h(msg).catch(() => {})));
+      await Promise.all(
+        this._msgHandlers.map((h) => Promise.resolve(h(msg)).catch(() => {}))
+      );
     });
   }
 
@@ -271,6 +275,7 @@ export class AgentMesh {
         jobId: p.jobId,
         resultHash: p.resultHash,
         resultUrl: p.resultUrl,
+        content: p.content,
         specialist: msg.from,
         deliveredAt: msg.timestamp,
       };
@@ -325,7 +330,7 @@ export class AgentMesh {
     const receipt = await tx.wait();
 
     await this.axl.send(
-      makeResult(this._endpoint, plannerEndpoint, { jobId, resultHash, resultUrl: rootHash })
+      makeResult(this._endpoint, plannerEndpoint, { jobId, resultHash, resultUrl: rootHash, content })
     );
 
     await this._emit({

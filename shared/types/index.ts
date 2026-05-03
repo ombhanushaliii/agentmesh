@@ -104,6 +104,7 @@ export interface ResultMessage {
   jobId: string;
   resultHash: string;
   resultUrl: string;
+  content?: string;
 }
 
 export interface EscrowState {

@@ -1,0 +1,16 @@
+{
+  "name": "@agentmesh/agents",
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist",
+    "dev": "bun --watch ./src/index.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@agentmesh/sdk": "workspace:*",
+    "@agentmesh/types": "workspace:*"
+  }
+}

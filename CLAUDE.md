@@ -177,10 +177,10 @@ person immediately.
 
 ---
 
-## Contract addressesCapabilityRegistry : [pending — fill after deploy]
-JobEscrow          : [pending — fill after deploy]
-Network            : 0G Chain
-Chain ID           : [from docs/0g-context.md]
+## Contract addressesCapabilityRegistry : 0x9e11518681fA6Fd9c273AD6564b9471090da378d
+JobEscrow          : 0x1c20da1d76Bc64cc51150F5f55d2232c8c7175ef
+Network            : 0G Chain (Galileo Testnet)
+Chain ID           : 16602
 
 ---
 

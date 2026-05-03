@@ -129,7 +129,7 @@ export class StorageClient {
       const [tree, treeErr] = await file.merkleTree();
       if (treeErr) throw new Error(`merkleTree: ${treeErr}`);
 
-      const rootHash = tree!.rootHash();
+      const rootHash = tree!.rootHash() as string;
       const [, uploadErr] = await this.indexer.upload(file, this.config.rpcUrl, this.wallet);
       if (uploadErr) throw new Error(`upload: ${uploadErr.message}`);
 

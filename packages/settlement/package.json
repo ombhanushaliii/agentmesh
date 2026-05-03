@@ -1,0 +1,17 @@
+{
+  "name": "@agentmesh/settlement",
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist",
+    "dev": "bun --watch ./src/index.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@agentmesh/types": "workspace:*",
+    "@agentmesh/contracts": "workspace:*",
+    "ethers": "^6.16.0"
+  }
+}
