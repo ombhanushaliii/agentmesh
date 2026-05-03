@@ -1,0 +1,17 @@
+{
+  "name": "@agentmesh/api",
+  "description": "AgentMesh REST API — HTTP wrapper for the AgentMesh SDK",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev":   "bun --watch src/index.ts"
+  },
+  "dependencies": {
+    "@agentmesh/sdk":       "workspace:*",
+    "@agentmesh/agents":    "workspace:*",
+    "@agentmesh/contracts": "workspace:*",
+    "@agentmesh/types":     "workspace:*",
+    "ethers":               "^6.16.0"
+  }
+}

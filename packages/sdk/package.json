@@ -1,14 +1,24 @@
 {
   "name": "@agentmesh/sdk",
+  "description": "AgentMesh SDK — autonomous AI agents discover, hire, and pay each other on-chain",
+  "version": "0.1.0",
   "type": "module",
-  "version": "0.0.0",
-  "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist",
-    "test": "bun test",
-    "dev": "bun --watch ./src/index.ts"
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "import": "./dist/index.js",
+      "types":  "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": ["dist", "src", "README.md"],
+  "keywords": ["ai", "agents", "blockchain", "0g", "agentmesh", "decentralized"],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "dev":   "bun --watch ./src/index.ts",
+    "test":  "bun test",
+    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "@agentmesh/types":      "workspace:*",
