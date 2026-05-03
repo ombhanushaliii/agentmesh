@@ -17,10 +17,8 @@ export class JobEventMonitor {
   ): Promise<void> {
     this.isRunning = true;
 
-    const deliveredFilter = this.contract.filters.JobDelivered();
-    const failedFilter = this.contract.filters.JobFailed();
-
-    this.contract.on(deliveredFilter, async (jobId, resultHash, resultUrl, disputeWindowEnd, event) => {
+    // Use string event name — ethers v6 filter objects pass ContractEventPayload as first arg
+    this.contract.on('JobDelivered', async (jobId: string, resultHash: string, resultUrl: string, disputeWindowEnd: bigint) => {
       if (!this.isRunning) return;
 
       const now = Math.floor(Date.now() / 1000);
@@ -29,13 +27,13 @@ export class JobEventMonitor {
       await new Promise(resolve => setTimeout(resolve, delay * 1000));
 
       const job = await this.contract.getJob(jobId);
-      if (job.status === 2n) { // JobStatus.DELIVERED
+      if (job.status === 2n) {
         const amount = await this.contract.escrow(jobId);
         await onDelivered(jobId, job.specialist as string, amount);
       }
     });
 
-    this.contract.on(failedFilter, async (jobId, specialist, event) => {
+    this.contract.on('JobFailed', async (jobId: string, specialist: string) => {
       if (!this.isRunning) return;
       await onFailed(jobId, specialist);
     });

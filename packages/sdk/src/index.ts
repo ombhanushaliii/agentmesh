@@ -66,6 +66,11 @@ export class AgentMesh {
   private _eventCounter = 0;
   private _eventHandlers: Array<(e: AgentEvent) => void | Promise<void>> = [];
   private _msgHandlers: Array<(msg: MessageEnvelope) => void | Promise<void>> = [];
+  // Slightly above testnet market rate (~570 Gwei) to replace stuck pending txs
+  private _gasOverride = {
+    maxFeePerGas: ethers.parseUnits("700", "gwei"),
+    maxPriorityFeePerGas: ethers.parseUnits("700", "gwei"),
+  };
 
   constructor(config: AgentMeshConfig) {
     this.config = config;
@@ -123,7 +128,8 @@ export class AgentMesh {
       this.config.agentName,
       capabilities,
       pricePerJob,
-      this._endpoint
+      this._endpoint,
+      this._gasOverride
     );
     const receipt = await tx.wait();
     await this._emit({
@@ -158,7 +164,7 @@ export class AgentMesh {
       capability,
       deadline,
       parentJobId ?? ethers.ZeroHash,
-      { value: maxBudget }
+      { value: maxBudget, ...this._gasOverride }
     );
     const receipt = await tx.wait();
 
@@ -244,7 +250,7 @@ export class AgentMesh {
     specialistAddress: string,
     agreedPrice: bigint
   ): Promise<void> {
-    const tx = await (this.escrow as any).acceptBid(jobId, specialistAddress, agreedPrice);
+    const tx = await (this.escrow as any).acceptBid(jobId, specialistAddress, agreedPrice, this._gasOverride);
     const receipt = await tx.wait();
 
     const profile = await this.registry.getProfile(specialistAddress);
@@ -268,7 +274,7 @@ export class AgentMesh {
   }
 
   async raiseDispute(jobId: string): Promise<void> {
-    const tx = await (this.escrow as any).raiseDispute(jobId)
+    const tx = await (this.escrow as any).raiseDispute(jobId, this._gasOverride)
     const receipt = await tx.wait()
     await this._emit({
       type: "DISPUTE_RAISED",
@@ -303,7 +309,7 @@ export class AgentMesh {
   // ── Specialist: bidding and delivering ────────────────────
 
   async bid(jobId: string, bidPrice: bigint, plannerEndpoint: string): Promise<void> {
-    const tx = await (this.escrow as any).bid(jobId, bidPrice);
+    const tx = await (this.escrow as any).bid(jobId, bidPrice, this._gasOverride);
     await tx.wait();
 
     await this.axl.send(
@@ -338,7 +344,7 @@ export class AgentMesh {
     const rootHash = await this.storage.fileUpload(bytes);
     const resultHash = ethers.keccak256(bytes);
 
-    const tx = await (this.escrow as any).submitResult(jobId, resultHash, rootHash);
+    const tx = await (this.escrow as any).submitResult(jobId, resultHash, rootHash, this._gasOverride);
     const receipt = await tx.wait();
 
     await this.axl.send(
@@ -374,11 +380,12 @@ export class AgentMesh {
       deadline: number;
     }>
   ): Promise<string[]> {
-    return Promise.all(
-      subTasks.map((t) =>
-        this.postJob(t.description, t.capability, t.budget, t.deadline, parentJobId)
-      )
-    );
+    // Sequential — parallel postJob calls share a nonce before any confirms
+    const ids: string[] = [];
+    for (const t of subTasks) {
+      ids.push(await this.postJob(t.description, t.capability, t.budget, t.deadline, parentJobId));
+    }
+    return ids;
   }
 
   async awaitAllSubJobs(parentJobId: string, childJobIds: string[]): Promise<JobResult[]> {

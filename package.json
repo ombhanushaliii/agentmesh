@@ -5,7 +5,12 @@
   "scripts": {
     "build": "bun run --filter='*' build",
     "test": "bun run --filter='*' test",
-    "dev": "bun run --filter='*' dev"
+    "dev": "bun run --filter='*' dev",
+    "axl:planner": "cd axl && ./node.exe -config planner-config.json",
+    "axl:researcher": "cd axl && ./node.exe -config researcher-config.json",
+    "researcher": "bun run scripts/run-researcher.ts",
+    "demo": "bun run demo/index.ts",
+    "dashboard": "cd apps/dashboard && bun dev"
   },
   "dependencies": {
     "@0gfoundation/0g-storage-ts-sdk": "^1.2.8",

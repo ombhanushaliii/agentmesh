@@ -3,5 +3,5 @@
   "Peers": ["tcp://127.0.0.1:9101"],
   "Listen": [],
   "api_port": 9112,
-  "tcp_port": 9111
+  "tcp_port": 9101
 }

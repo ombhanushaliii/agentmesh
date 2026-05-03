@@ -55,7 +55,8 @@ async function runDemo() {
     jobEscrowAddress: addresses.JobEscrow,
     executeContractCall: async ({ abiFunction, functionArgs }) => {
       const args = JSON.parse(functionArgs) as unknown[];
-      const tx = await (escrowContract as any)[abiFunction](...args);
+      const gasOverride = { maxFeePerGas: ethers.parseUnits("700", "gwei"), maxPriorityFeePerGas: ethers.parseUnits("700", "gwei") };
+      const tx = await (escrowContract as any)[abiFunction](...args, gasOverride);
       const receipt = await tx.wait();
       log(3, `Settlement: ${abiFunction}(${String(args[0]).slice(0, 10)}) tx=${receipt.hash.slice(0, 10)}`);
       return { transactionHash: receipt.hash as string, taskId: receipt.hash as string };

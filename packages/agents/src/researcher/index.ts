@@ -17,6 +17,8 @@ export class ResearcherAgent {
   private ai: GoogleGenAI;
   private activeJobs = new Set<string>();
   private jobDescriptions = new Map<string, string>();
+  private jobQueue: Array<() => Promise<void>> = [];
+  private queueRunning = false;
 
   constructor(config: {
     privateKey: string;
@@ -45,15 +47,28 @@ export class ResearcherAgent {
       if (this.activeJobs.has(job.id)) return;
       this.activeJobs.add(job.id);
       this.jobDescriptions.set(job.id, job.description);
-      // Bid at the job's max budget (planner already set this to a competitive amount)
       await this.mesh.bid(job.id, job.maxBudget, job.planner);
     });
 
+    // Queue jobs so storage transactions don't collide on nonce
     this.mesh.onBidAccepted(async (accept, plannerEndpoint) => {
       if (!this.activeJobs.has(accept.jobId)) return;
       const description = this.jobDescriptions.get(accept.jobId) ?? accept.jobId;
-      await this.handleJob(accept.jobId, description, plannerEndpoint);
+      this.jobQueue.push(() => this.handleJob(accept.jobId, description, plannerEndpoint));
+      this.drainQueue();
     });
+  }
+
+  private drainQueue(): void {
+    if (this.queueRunning) return;
+    this.queueRunning = true;
+    const next = async () => {
+      const task = this.jobQueue.shift();
+      if (!task) { this.queueRunning = false; return; }
+      await task();
+      next();
+    };
+    next();
   }
 
   private async handleJob(

@@ -206,23 +206,23 @@ EOF
 
 **Terminal 1 — Planner AXL node** (must start first)
 ```bash
-cd axl && ./node -config planner-config.json
+bun run axl:planner
 ```
 
 **Terminal 2 — Researcher AXL node**
 ```bash
-cd axl && ./node -config researcher-config.json
+bun run axl:researcher
 ```
 
 **Terminal 3 — Researcher agent**
 ```bash
-bun run scripts/run-researcher.ts
+bun run researcher
 ```
 Wait for `registered on-chain and listening for jobs` before continuing.
 
 **Terminal 4 — Dashboard**
 ```bash
-cd apps/dashboard && bun dev
+bun run dashboard
 ```
 
 Open `http://localhost:3000`, type a research goal, and click Run.
@@ -230,7 +230,7 @@ Open `http://localhost:3000`, type a research goal, and click Run.
 ### Running the demo without the dashboard
 
 ```bash
-bun run demo/index.ts
+bun run demo
 ```
 
 This runs both agents in one process and logs every step with transaction hashes.
