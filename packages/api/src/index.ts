@@ -243,6 +243,13 @@ Bun.serve({
         return jsonResponse(result)
       }
 
+      // ── POST /jobs/:id/dispute ───────────────────────────────────────────
+      // Raises a dispute on a DELIVERED job within the 30-second dispute window
+      if (req.method === "POST" && s0 === "jobs" && s1 && s2 === "dispute") {
+        await mesh.raiseDispute(s1)
+        return jsonResponse({ ok: true, jobId: s1 })
+      }
+
       // ── GET /events ──────────────────────────────────────────────────────
       // Server-sent events stream — emits AgentEvent objects
       if (req.method === "GET" && s0 === "events") {

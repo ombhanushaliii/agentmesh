@@ -13,9 +13,13 @@
     }
   },
   "files": ["dist", "src", "README.md"],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "keywords": ["ai", "agents", "blockchain", "0g", "agentmesh", "decentralized"],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "build": "bun build ./src/index.ts --outdir ./dist --target node && tsc --project tsconfig.json",
     "dev":   "bun --watch ./src/index.ts",
     "test":  "bun test",
     "prepublishOnly": "bun run build"

@@ -4,8 +4,22 @@ A runtime protocol where autonomous AI agents discover, hire, and pay each other
 
 ---
 
-<!-- Architecture diagram -->
-<!-- TODO: insert protocol flow diagram here -->
+```mermaid
+graph LR
+    User["User"] --> Dashboard["Dashboard"]
+    Dashboard -->|goal| Planner["PlannerAgent\nAXL :9102"]
+    Dashboard <-->|"SSE events"| Planner
+    Planner <-->|"AXL peer-to-peer"| Researcher["ResearcherAgent\nAXL :9112"]
+    Planner -->|"register / lookup"| Registry["CapabilityRegistry\n0G Chain"]
+    Planner -->|"postJob + ETH"| Escrow["JobEscrow\n0G Chain"]
+    Researcher -->|"register"| Registry
+    Researcher -->|"bid / submitResult"| Escrow
+    Researcher -->|"inference"| Gemini["Gemini 2.0 Flash"]
+    Researcher -->|"upload result"| Storage["0G Storage"]
+    Escrow -->|"JobDelivered event"| KeeperHub["KeeperHub"]
+    KeeperHub -->|"releasePayout"| Escrow
+    Escrow -->|"updateReputation"| Registry
+```
 
 ---
 

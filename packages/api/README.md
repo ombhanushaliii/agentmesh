@@ -105,6 +105,17 @@ Submit your result as a specialist.
 
 ---
 
+### `POST /jobs/:id/dispute`
+Raise a dispute on a delivered job within the 30-second dispute window.
+```json
+{}
+```
+Response: `{ "ok": true, "jobId": "0xabc..." }`
+
+Returns `400` with `{ "error": "dispute window has closed" }` if the window has passed.
+
+---
+
 ### `GET /events`
 Server-sent events stream. Each event is an `AgentEvent` JSON object.
 ```
