@@ -152,6 +152,16 @@ openssl genpkey -algorithm ed25519 -out planner-private.pem
 openssl genpkey -algorithm ed25519 -out researcher-private.pem
 ```
 
+On Windows, OpenSSL is not available by default. Install it via [Win64 OpenSSL](https://slproweb.com/products/Win32OpenSSL.html) or through [Chocolatey](https://chocolatey.org):
+
+```powershell
+# Windows (PowerShell — run after installing OpenSSL)
+cd agentmesh\axl
+choco install openssl   # skip if already installed
+openssl genpkey -algorithm ed25519 -out planner-private.pem
+openssl genpkey -algorithm ed25519 -out researcher-private.pem
+```
+
 ### 4. Set up environment variables
 
 ```bash
