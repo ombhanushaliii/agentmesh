@@ -1,5 +1,8 @@
 import { PlannerAgent } from "@agentmesh/agents";
 import { ResearcherAgent } from "@agentmesh/agents";
+import { KeeperHubSettlement } from "@agentmesh/settlement";
+import { ethers } from "ethers";
+import { JobEscrowABI, addresses } from "@agentmesh/contracts";
 
 const log = (step: number, msg: string) =>
   console.log(`[${new Date().toISOString()}] [Step ${step}] ${msg}`);
@@ -42,6 +45,24 @@ async function runDemo() {
   await planner.start();
   log(2, "Planner registered on-chain");
 
+  // Start settlement monitor so JobDelivered events trigger releasePayout
+  const rpcUrl = process.env.RPC_URL ?? "https://evmrpc-testnet.0g.ai";
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
+  const settlerWallet = new ethers.Wallet(plannerKey, provider);
+  const escrowContract = new ethers.Contract(addresses.JobEscrow, JobEscrowABI, settlerWallet);
+  const settlement = new KeeperHubSettlement({
+    rpcUrl,
+    jobEscrowAddress: addresses.JobEscrow,
+    executeContractCall: async ({ abiFunction, functionArgs }) => {
+      const args = JSON.parse(functionArgs) as unknown[];
+      const tx = await (escrowContract as any)[abiFunction](...args);
+      const receipt = await tx.wait();
+      log(3, `Settlement: ${abiFunction}(${String(args[0]).slice(0, 10)}) tx=${receipt.hash.slice(0, 10)}`);
+      return { transactionHash: receipt.hash as string, taskId: receipt.hash as string };
+    },
+  });
+  settlement.start().catch((e) => console.error("[settlement] monitor error:", e));
+
   const goal = "Research the top 3 risks of liquid staking in 2025";
   log(3, `Executing goal: "${goal}"`);
 
@@ -53,6 +74,7 @@ async function runDemo() {
   console.log("─".repeat(60) + "\n");
 
   log(5, "Shutting down...");
+  await settlement.stop();
   await researcher.stop();
   await planner.stop();
 }

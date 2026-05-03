@@ -57,21 +57,24 @@ export class PlannerAgent {
   }
 
   async executeGoal(goal: string): Promise<string> {
-    // 1. Decompose goal into sub-tasks via 0G Compute
+    const subJobBudget = 1_000_000_000_000_000n; // 0.001 ETH per sub-job
+
+    // 1. Decompose goal into sub-tasks
     const decomposition = await this.runDecomposition(goal);
     const tasks: DecompositionTask[] = decomposition.tasks;
 
     // 2. Post parent job + sub-jobs on-chain
-    const parentDeadline = Math.floor(Date.now() / 1000) + 360;
-    const parentJobId = await this.mesh.postJob(goal, "planning", 0n, parentDeadline);
+    // Parent job budget must be non-zero; each sub-job has its own separate escrow
+    const now = Math.floor(Date.now() / 1000);
+    const parentJobId = await this.mesh.postJob(goal, "planning", subJobBudget, now + 360);
 
     const childIds = await this.mesh.decompose(
       parentJobId,
       tasks.map((t) => ({
         description: t.description,
         capability: t.capability,
-        budget: 1_000_000_000_000_000n,
-        deadline: Math.floor(Date.now() / 1000) + 180,
+        budget: subJobBudget,
+        deadline: now + 180,
       }))
     );
 

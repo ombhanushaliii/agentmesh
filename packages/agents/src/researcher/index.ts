@@ -39,13 +39,14 @@ export class ResearcherAgent {
 
   async start(): Promise<void> {
     await this.mesh.connect();
-    await this.mesh.register(["web-research", "summarization"], 8_000_000_000_000_000n);
+    await this.mesh.register(["web-research", "summarization"], 1_000_000_000_000_000n);
 
     this.mesh.onJobAvailable(async (job: JobPost) => {
       if (this.activeJobs.has(job.id)) return;
       this.activeJobs.add(job.id);
       this.jobDescriptions.set(job.id, job.description);
-      await this.mesh.bid(job.id, 8_000_000_000_000_000n, job.planner);
+      // Bid at the job's max budget (planner already set this to a competitive amount)
+      await this.mesh.bid(job.id, job.maxBudget, job.planner);
     });
 
     this.mesh.onBidAccepted(async (accept, plannerEndpoint) => {
