@@ -1,0 +1,7 @@
+{
+  "PrivateKeyPath": "planner-private.pem",
+  "Peers": [],
+  "Listen": ["tcp://127.0.0.1:9001"],
+  "api_port": 9002,
+  "tcp_port": 9001
+}

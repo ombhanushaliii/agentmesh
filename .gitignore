@@ -6,3 +6,8 @@ dist
 
 settings.local.json
 *.tsbuildinfo
+
+# AXL node binary and private keys — never commit these
+axl/node
+axl/node.exe
+axl/*.pem
