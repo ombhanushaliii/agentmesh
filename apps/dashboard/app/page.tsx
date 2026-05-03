@@ -22,6 +22,7 @@ type AgentEvent = {
   timestamp: string
   agent: string
   action: string
+  jobId?: string
 }
 
 type Phase = "idle" | "decomposing" | "researching" | "synthesizing" | "done"
@@ -236,6 +237,9 @@ export default function HomePage() {
   const [events, setEvents] = useState<AgentEvent[]>([])
   const [agents, setAgents] = useState<AgentProfile[]>([])
   const [copied, setCopied] = useState(false)
+  const [lastJobId, setLastJobId] = useState<string | null>(null)
+  const [disputeState, setDisputeState] = useState<"idle" | "pending" | "ok" | "error">("idle")
+  const [disputeError, setDisputeError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const phase = derivePhase(events, isRunning, result !== null)
@@ -260,6 +264,7 @@ export default function HomePage() {
     es.onmessage = (e) => {
       const data = JSON.parse(e.data) as AgentEvent
       setEvents((prev) => [data, ...prev].slice(0, 100))
+      if (data.jobId) setLastJobId(data.jobId)
     }
     return () => es.close()
   }
@@ -269,6 +274,9 @@ export default function HomePage() {
     setIsRunning(true)
     setResult(null)
     setEvents([])
+    setLastJobId(null)
+    setDisputeState("idle")
+    setDisputeError(null)
 
     try {
       const res = await fetch("/api/run", {
@@ -300,6 +308,28 @@ export default function HomePage() {
       console.error("Run failed", e)
     } finally {
       setIsRunning(false)
+    }
+  }
+
+  async function raiseDispute() {
+    if (!lastJobId || disputeState !== "idle") return
+    setDisputeState("pending")
+    try {
+      const res = await fetch("/api/dispute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: lastJobId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setDisputeError(data.error ?? "dispute failed")
+        setDisputeState("error")
+      } else {
+        setDisputeState("ok")
+      }
+    } catch {
+      setDisputeError("network error")
+      setDisputeState("error")
     }
   }
 
@@ -372,18 +402,41 @@ export default function HomePage() {
           {result && (
             <Card>
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
                     Answer
                   </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copyResult}
-                    className="h-7 px-2.5 text-xs"
-                  >
-                    {copied ? "Copied ✓" : "Copy"}
-                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    {disputeState === "idle" && lastJobId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={raiseDispute}
+                        className="h-7 px-2.5 text-xs text-muted-foreground/60 hover:text-destructive"
+                      >
+                        Dispute
+                      </Button>
+                    )}
+                    {disputeState === "pending" && (
+                      <span className="text-xs text-muted-foreground animate-pulse">Raising dispute…</span>
+                    )}
+                    {disputeState === "ok" && (
+                      <span className="text-xs text-muted-foreground">Dispute raised ✓</span>
+                    )}
+                    {disputeState === "error" && (
+                      <span className="text-xs text-destructive/70 max-w-[160px] truncate" title={disputeError ?? ""}>
+                        {disputeError}
+                      </span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={copyResult}
+                      className="h-7 px-2.5 text-xs"
+                    >
+                      {copied ? "Copied ✓" : "Copy"}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

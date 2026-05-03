@@ -25,7 +25,7 @@ async function initPlanner(): Promise<PlannerAgent> {
 
   agent.onAgentEvent((e: AgentEvent) => {
     const parts = [e.type, e.jobId?.slice(0, 8), e.detail].filter(Boolean)
-    publish(e.agentName, parts.join(" — "))
+    publish(e.agentName, parts.join(" — "), e.jobId)
   })
 
   await agent.start()

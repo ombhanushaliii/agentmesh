@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "../..",
+    "declarationDir": "./dist",
+    "paths": {
+      "@agentmesh/types":     ["../../shared/types/index.ts"],
+      "@agentmesh/storage":   ["../storage/src/index.ts"],
+      "@agentmesh/contracts": ["../contracts/src/index.ts"],
+      "@agentmesh/messaging": ["../messaging/src/index.ts"]
+    }
+  },
+  "include": [
+    "src",
+    "../../shared/types/index.ts",
+    "../storage/src/index.ts",
+    "../contracts/src/index.ts",
+    "../messaging/src/index.ts"
+  ]
+}

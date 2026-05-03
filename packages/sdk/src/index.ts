@@ -267,6 +267,18 @@ export class AgentMesh {
     });
   }
 
+  async raiseDispute(jobId: string): Promise<void> {
+    const tx = await (this.escrow as any).raiseDispute(jobId)
+    const receipt = await tx.wait()
+    await this._emit({
+      type: "DISPUTE_RAISED",
+      agentName: this.config.agentName,
+      jobId,
+      txHash: receipt.hash,
+      explorerUrl: `https://chainscan-galileo.0g.ai/tx/${receipt.hash}`,
+    })
+  }
+
   onResult(handler: (result: JobResult) => void | Promise<void>): void {
     this._msgHandlers.push(async (msg) => {
       if (msg.type !== "RESULT") return;

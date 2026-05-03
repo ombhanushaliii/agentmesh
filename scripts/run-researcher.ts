@@ -3,6 +3,7 @@ import { ResearcherAgent } from "@agentmesh/agents";
 const privateKey = process.env.RESEARCHER_PRIVATE_KEY;
 const inferenceApiKey = process.env.GEMINI_API_KEY;
 const axlBridgeUrl = process.env.RESEARCHER_AXL_URL ?? "http://127.0.0.1:9112";
+const agentName = process.env.RESEARCHER_NAME ?? "researcher-01";
 
 if (!privateKey) { console.error("RESEARCHER_PRIVATE_KEY not set"); process.exit(1); }
 if (!inferenceApiKey) { console.error("GEMINI_API_KEY not set"); process.exit(1); }
@@ -10,7 +11,7 @@ if (!inferenceApiKey) { console.error("GEMINI_API_KEY not set"); process.exit(1)
 const agent = new ResearcherAgent({
   privateKey,
   axlBridgeUrl,
-  agentName: "researcher-01",
+  agentName,
   inferenceApiKey,
 });
 
