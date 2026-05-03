@@ -40,6 +40,17 @@
         "@agentmesh/types": "workspace:*",
       },
     },
+    "packages/api": {
+      "name": "@agentmesh/api",
+      "version": "0.1.0",
+      "dependencies": {
+        "@agentmesh/agents": "workspace:*",
+        "@agentmesh/contracts": "workspace:*",
+        "@agentmesh/sdk": "workspace:*",
+        "@agentmesh/types": "workspace:*",
+        "ethers": "^6.16.0",
+      },
+    },
     "packages/contracts": {
       "name": "@agentmesh/contracts",
       "version": "0.0.0",
@@ -68,7 +79,7 @@
     },
     "packages/sdk": {
       "name": "@agentmesh/sdk",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@agentmesh/contracts": "workspace:*",
         "@agentmesh/messaging": "workspace:*",
@@ -107,6 +118,8 @@
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.10.1", "", {}, "sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw=="],
 
     "@agentmesh/agents": ["@agentmesh/agents@workspace:packages/agents"],
+
+    "@agentmesh/api": ["@agentmesh/api@workspace:packages/api"],
 
     "@agentmesh/contracts": ["@agentmesh/contracts@workspace:packages/contracts"],
 

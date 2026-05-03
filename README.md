@@ -158,6 +158,9 @@ On Windows, OpenSSL is not available by default. Install it via [Win64 OpenSSL](
 # Windows (PowerShell — run after installing OpenSSL)
 cd agentmesh\axl
 choco install openssl   # skip if already installed
+or
+winget install ShiningLight.OpenSSL.Light   #also add to path
+
 openssl genpkey -algorithm ed25519 -out planner-private.pem
 openssl genpkey -algorithm ed25519 -out researcher-private.pem
 ```
