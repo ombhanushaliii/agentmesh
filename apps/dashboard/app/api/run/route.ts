@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server"
 import { PlannerAgent } from "@agentmesh/agents"
+import { KeeperHubSettlement } from "@agentmesh/settlement"
+import { ethers } from "ethers"
+import { JobEscrowABI, addresses } from "@agentmesh/contracts"
 import { publish } from "../../../lib/eventBus"
 import type { AgentEvent } from "@agentmesh/types"
 
 let planner: PlannerAgent | null = null
 let initPromise: Promise<PlannerAgent> | null = null
+let settlement: KeeperHubSettlement | null = null
 
 async function initPlanner(): Promise<PlannerAgent> {
   const privateKey = process.env.PLANNER_PRIVATE_KEY
@@ -14,7 +18,7 @@ async function initPlanner(): Promise<PlannerAgent> {
 
   const agent = new PlannerAgent({
     privateKey,
-    axlBridgeUrl: process.env.AXL_BRIDGE_URL ?? "http://127.0.0.1:9002",
+    axlBridgeUrl: process.env.AXL_BRIDGE_URL ?? "http://127.0.0.1:9102",
     agentName: "planner-01",
     inferenceApiKey,
   })
@@ -26,6 +30,27 @@ async function initPlanner(): Promise<PlannerAgent> {
 
   await agent.start()
   planner = agent
+
+  if (!settlement) {
+    const rpcUrl = process.env.RPC_URL ?? "https://evmrpc-testnet.0g.ai"
+    const provider = new ethers.JsonRpcProvider(rpcUrl)
+    const wallet = new ethers.Wallet(privateKey, provider)
+    const escrow = new ethers.Contract(addresses.JobEscrow, JobEscrowABI, wallet)
+
+    settlement = new KeeperHubSettlement({
+      rpcUrl,
+      jobEscrowAddress: addresses.JobEscrow,
+      executeContractCall: async ({ abiFunction, functionArgs }) => {
+        const args = JSON.parse(functionArgs) as unknown[]
+        const tx = await (escrow as any)[abiFunction](...args)
+        const receipt = await tx.wait()
+        publish("keeperhub-settlement", `PAYOUT_SETTLED — ${String(args[0]).slice(0, 10)}`)
+        return { transactionHash: receipt.hash as string, taskId: receipt.hash as string }
+      },
+    })
+    settlement.start().catch((e) => console.error("[settlement] monitor error:", e))
+  }
+
   return agent
 }
 

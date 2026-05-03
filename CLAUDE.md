@@ -256,8 +256,8 @@ Before writing any UI code, study example/ui/ in full.
 ### Infrastructure (packages/contracts, storage, messaging, sdk, shared/types)
 - [x] Repo initialized — bun workspace, tsconfig, .env.example
 - [x] shared/types/index.ts committed
-- [ ] CapabilityRegistry.sol — deployed, address recorded above
-- [ ] JobEscrow.sol — deployed, address recorded above
+- [x] CapabilityRegistry.sol — deployed, address recorded above
+- [x] JobEscrow.sol — deployed, address recorded above
 - [x] packages/storage — 0G KV + Log + File working
 - [x] packages/messaging — AXL client working (10 unit tests passing; two-node test requires live AXL binary)
 - [x] packages/sdk — AgentMesh class written; end-to-end requires deployed contracts
@@ -265,15 +265,15 @@ Before writing any UI code, study example/ui/ in full.
 - [x] docs/architecture.md written
 
 ### Application (agents, settlement, dashboard, demo)
-- [x] ResearcherAgent — registers, receives jobs, runs 0G Compute inference (GLM-5-FP8)
-- [x] PlannerAgent — decomposes goals, posts jobs, synthesizes results via 0G Compute
-- [x] packages/settlement — KeeperHub MCP settlement + dispute window monitor written
-- [x] apps/dashboard — Next.js UI renders, agent cards, activity feed, result card
-- [x] demo/index.ts — full 15-step loop written (requires deployed contracts to run)
-- [ ] Contracts deployed to 0G testnet — addresses.json still empty; blocks all on-chain flows
-- [ ] dashboard wired to real agents (event stream is placeholder; /api/run executes real PlannerAgent)
-- [ ] README.md complete
-- [ ] FEEDBACK.md written (updated throughout, not at the end)
+- [x] ResearcherAgent — registers, receives jobs, runs Gemini 2.0 Flash inference
+- [x] PlannerAgent — decomposes goals, posts jobs, synthesizes results via Gemini 2.0 Flash
+- [x] packages/settlement — dispute window monitor fixed (event params + BigInt); ethers executor wired
+- [x] apps/dashboard — Next.js UI renders, pipeline visualization, agent cards, activity feed, result card
+- [x] demo/index.ts — full loop written, AXL ports corrected (9102/9112)
+- [x] Contracts deployed to 0G testnet — addresses.json filled
+- [x] dashboard wired to real agents — settlement singleton starts alongside planner in /api/run
+- [x] README.md complete
+- [x] FEEDBACK.md written
 
 ---
 

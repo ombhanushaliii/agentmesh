@@ -14,11 +14,11 @@ async function runDemo() {
     process.exit(1);
   }
 
-  // Researcher connects to its own AXL node (port 9012)
+  // Researcher connects to its own AXL node (port 9112)
   log(1, "Starting ResearcherAgent...");
   const researcher = new ResearcherAgent({
     privateKey: researcherKey,
-    axlBridgeUrl: process.env.RESEARCHER_AXL_URL ?? "http://127.0.0.1:9012",
+    axlBridgeUrl: process.env.RESEARCHER_AXL_URL ?? "http://127.0.0.1:9112",
     agentName: "researcher-01",
     inferenceApiKey,
   });
@@ -28,11 +28,11 @@ async function runDemo() {
   await researcher.start();
   log(1, "Researcher registered on-chain");
 
-  // Planner connects to its own AXL node (port 9002)
+  // Planner connects to its own AXL node (port 9102)
   log(2, "Starting PlannerAgent...");
   const planner = new PlannerAgent({
     privateKey: plannerKey,
-    axlBridgeUrl: process.env.AXL_BRIDGE_URL ?? "http://127.0.0.1:9002",
+    axlBridgeUrl: process.env.AXL_BRIDGE_URL ?? "http://127.0.0.1:9102",
     agentName: "planner-01",
     inferenceApiKey,
   });
