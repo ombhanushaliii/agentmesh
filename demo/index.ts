@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { PlannerAgent } from "@agentmesh/agents";
 import { ResearcherAgent } from "@agentmesh/agents";
 
